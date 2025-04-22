@@ -1,58 +1,87 @@
 package cacipher
 
 import (
+	"bufio"
+	"fmt"
 	"io"
 	"strings"
+	"unicode"
 )
 
-//  cipher holds the requirements for caesar-cipher encode/decode
-type cipher struct {
-	text  string    // ecoded/pre-encoded text string
-	shift int       // number of shifts
-	r     io.Reader // std reader interface
+// Cipher struct holds all the necessary components for encryption/decryption
+type Cipher struct {
+	text    string    // text string to be encrypted/decrypted
+	shift   int       // number of shifts
+	r       io.Reader // input reader interface
+	w       io.Writer // output writer interface
+	decrypt bool      // flag to determine operation (encrypt/decrypt)
 }
 
-// Encode encode a plaintext to the caesar-chiper encryption
-func Encode(plaintxt string, shift uint) string {
-	c := cipher{
-		text:  plaintxt,
-		shift: int(shift),
-		r:     strings.NewReader(plaintxt),
+// NewCipher creates and returns a new Cipher instance
+func NewCipher(shift int, reader io.Reader, writer io.Writer, decrypt bool) *Cipher {
+	return &Cipher{
+		text:    "",
+		shift:   shift,
+		r:       reader,
+		w:       writer,
+		decrypt: decrypt,
 	}
-	ciphertxt := new(strings.Builder)
-	io.Copy(ciphertxt, c)
-	return ciphertxt.String()
 }
 
-// Decode decode a caesar-cipher encryption to the original plaintext
-func Decode(ciphertxt string, shift uint) string {
-	c := cipher{
-		text:  ciphertxt,
-		shift: -int(shift),
-		r:     strings.NewReader(ciphertxt),
+// transform applies the Caesar cipher transformation on the text
+func (c *Cipher) transform() string {
+	var result strings.Builder
+	shift := c.shift
+
+	// If decrypting, negate the shift value
+	if c.decrypt {
+		shift = -shift
 	}
-	plaintxt := new(strings.Builder)
-	io.Copy(plaintxt, c)
-	return plaintxt.String()
+
+	// Make sure shift is within 0-25 range (after applying modulo)
+	shift = ((shift % 26) + 26) % 26
+
+	for _, char := range c.text {
+		if unicode.IsLetter(char) {
+			// Determine if uppercase or lowercase
+			base := 'a'
+			if unicode.IsUpper(char) {
+				base = 'A'
+			}
+
+			// Apply the shift and wrap around the alphabet
+			shifted := (int(char) - int(base) + shift) % 26
+			result.WriteRune(rune(shifted + int(base)))
+		} else {
+			// Non-alphabetic characters remain unchanged
+			result.WriteRune(char)
+		}
+	}
+
+	return result.String()
 }
 
-func (c cipher) Read(p []byte) (n int, err error) {
-	n, err = c.r.Read(p)
-	for i := 0; i < n; i++ {
-		p[i] = c.shifter(p[i])
+// Transform reads from input, performs cipher operation, and writes to output
+func (c *Cipher) Transform() error {
+	scanner := bufio.NewScanner(c.r)
+	for scanner.Scan() {
+		c.text = scanner.Text()
+		result := c.transform()
+		if _, err := fmt.Fprintln(c.w, result); err != nil {
+			return err
+		}
 	}
-	return
+	return scanner.Err()
 }
-func (c cipher) shifter(b byte) byte {
-	shift := (c.shift%26 + 26) % 26
-	var char byte
-	switch {
-	case 'a' <= b && b <= 'z':
-		char = 'a'
-	case 'A' <= b && b <= 'Z':
-		char = 'A'
-	default:
-		return b
-	}
-	return (char + ((b-char)+byte(shift))%26)
+
+// TransformText transforms the provided text and writes to output
+func (c *Cipher) TransformText(text string) error {
+	c.text = text
+	result := c.transform()
+	_, err := fmt.Fprintln(c.w, result)
+	return err
+}
+
+func (c *Cipher) SetReader(reader io.Reader) {
+	c.r = reader
 }
