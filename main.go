@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rtanx/caesarcipher/cacipher"
+	"github.com/rtanx/cacipher/cipher"
 	"github.com/spf13/pflag"
 )
 
@@ -46,7 +46,7 @@ func main() {
 	}
 
 	// Create a cipher instance
-	c := cacipher.NewCipher(shift, nil, outputWriter, decFlag)
+	c := cipher.NewCaesar(shift, nil, outputWriter, decFlag)
 
 	// Handle input based on what's provided
 	// Case 1: Input file specified

@@ -1,4 +1,4 @@
-module github.com/rtanx/caesarcipher
+module github.com/rtanx/cacipher
 
 go 1.15
 

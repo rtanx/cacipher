@@ -1,4 +1,4 @@
-package cacipher
+package cipher
 
 import (
 	"bufio"
@@ -8,8 +8,8 @@ import (
 	"unicode"
 )
 
-// Cipher struct holds all the necessary components for encryption/decryption
-type Cipher struct {
+// Caesar struct holds all the necessary components for encryption/decryption
+type Caesar struct {
 	text    string    // text string to be encrypted/decrypted
 	shift   int       // number of shifts
 	r       io.Reader // input reader interface
@@ -17,9 +17,9 @@ type Cipher struct {
 	decrypt bool      // flag to determine operation (encrypt/decrypt)
 }
 
-// NewCipher creates and returns a new Cipher instance
-func NewCipher(shift int, reader io.Reader, writer io.Writer, decrypt bool) *Cipher {
-	return &Cipher{
+// NewCaesar creates and returns a new Caesar instance
+func NewCaesar(shift int, reader io.Reader, writer io.Writer, decrypt bool) *Caesar {
+	return &Caesar{
 		text:    "",
 		shift:   shift,
 		r:       reader,
@@ -29,7 +29,7 @@ func NewCipher(shift int, reader io.Reader, writer io.Writer, decrypt bool) *Cip
 }
 
 // transform applies the Caesar cipher transformation on the text
-func (c *Cipher) transform() string {
+func (c *Caesar) transform() string {
 	var result strings.Builder
 	shift := c.shift
 
@@ -62,7 +62,7 @@ func (c *Cipher) transform() string {
 }
 
 // Transform reads from input, performs cipher operation, and writes to output
-func (c *Cipher) Transform() error {
+func (c *Caesar) Transform() error {
 	scanner := bufio.NewScanner(c.r)
 	for scanner.Scan() {
 		c.text = scanner.Text()
@@ -75,13 +75,13 @@ func (c *Cipher) Transform() error {
 }
 
 // TransformText transforms the provided text and writes to output
-func (c *Cipher) TransformText(text string) error {
+func (c *Caesar) TransformText(text string) error {
 	c.text = text
 	result := c.transform()
 	_, err := fmt.Fprintln(c.w, result)
 	return err
 }
 
-func (c *Cipher) SetReader(reader io.Reader) {
+func (c *Caesar) SetReader(reader io.Reader) {
 	c.r = reader
 }
