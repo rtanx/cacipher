@@ -15,16 +15,18 @@ func main() {
 	var inputFile string
 	var outputFile string
 	var showHelp bool
+	var isInteractive bool
 
 	pflag.BoolVarP(&decFlag, "decrypt", "d", false, "Perform decryption instead of encryption to the input text")
 	pflag.IntVarP(&shift, "shift", "s", 13, "Shift value")
 	pflag.StringVarP(&inputFile, "in", "i", "", "Input file (default: stdin or command-line argument)")
 	pflag.StringVarP(&outputFile, "out", "o", "", "Output file (default: stdout)")
+	pflag.BoolVarP(&isInteractive, "interactive", "I", false, "Interactive mode (default: false)")
 	pflag.BoolVarP(&showHelp, "help", "h", false, "Show help")
 
 	pflag.Parse()
 
-	if showHelp || (len(os.Args) == 0) {
+	if showHelp || (len(os.Args) <= 1) {
 		fmt.Println("Caesar Cipher Tool - Encrypt or decrypt text using ROT-N cipher")
 		fmt.Println("\nUsage:")
 		pflag.PrintDefaults()
@@ -77,13 +79,16 @@ func main() {
 		return
 	}
 
-	// Case 3: No input file or text arguments, use stdin
-	fmt.Print("Enter text (Ctrl+D to finish):\n\n")
+	// Case 3: if Interactive mode is true and no input file or text arguments, use stdin
+	if isInteractive {
+		fmt.Print("Enter text (Ctrl+D to finish):\n\n")
 
-	c.SetReader(os.Stdin)
-	if err := c.Transform(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error processing input: %v\n", err)
-		os.Exit(1)
+		c.SetReader(os.Stdin)
+		if err := c.Transform(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error processing input: %v\n", err)
+			os.Exit(1)
+		}
+		return
 	}
 
 }
